@@ -6,22 +6,41 @@ from watchlist_app.models import WatchList,StreamingPlatform
 from watchlist_app.api.serializers import WatchListSerializer,StreamPlatformSerializer
 
 
-class StreamPlatforAv(APIView):
+class StreamPlatforAV(APIView):
     def get(self,request):
-        platform = StreamingPlatform.objects.all()
+        platform =  StreamingPlatform.objects.all()
         serializer = StreamPlatformSerializer(platform,many=True)
         return Response(serializer.data)
     def post(self,request):
-        serializer = StreamPlatformSerializer(data = request.data)
+        serializer = StreamPlatformSerializer(data = request.data,many=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors,status= status.HTTP_400_BAD_REQUEST)
     
-            
-            
-    
+class StreamPlatformDetailAV(APIView):
+    def get(self,request,pk):
+        try:
+            platform = StreamingPlatform.objects.get(pk =pk)
+        except platform.DoesNotExist:
+            return Response({"error":"Platform not Found"}, status= status.HTTP_400_BAD_REQUEST)
+        serializer = StreamPlatformSerializer(platform)
+        return Response(serializer.data)
+    def put(self,request,pk):
+        platform = StreamingPlatform.objects.get(pk=pk)
+        serializer = StreamPlatformSerializer(platform,data = request)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        
+        return Response(serializer.errors)
+        
+    def delete(self,response,pk):
+        platform = StreamingPlatform.objects.get(pk =pk)
+        platform.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
+    
 class WatchListAV(APIView):
     def get(self, request):
         movies = WatchList.objects.all()
@@ -29,14 +48,14 @@ class WatchListAV(APIView):
         return Response(serializer.data)
     
     def post(self, request):
-        serializer = WatchListSerializer(data=request.data)
+        serializer = WatchListSerializer(data=request.data,many=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
         else:
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
-class WatchDetailsAP(APIView):
+class WatchDetailsAV(APIView):
     def get(self,request,pk):
         try:
             movie = WatchList.objects.get(pk=pk)
